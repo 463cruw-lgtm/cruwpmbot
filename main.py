@@ -7,17 +7,11 @@ from flask import Flask
 from threading import Thread
 
 from aiogram import Bot, Dispatcher, F, BaseMiddleware
-
 from aiogram.client.default import DefaultBotProperties
-
 from aiogram.exceptions import TelegramBadRequest
-
 from aiogram.filters import Command
-
 from aiogram.fsm.context import FSMContext
-
 from aiogram.fsm.state import State, StatesGroup
-
 from aiogram.types import (
     Message,
     CallbackQuery,
@@ -43,7 +37,6 @@ from database import (
     sql
 )
 
-
 from balance import (
     register_balance,
     check_payments_loop,
@@ -57,7 +50,6 @@ from subscription import (
 )
 
 from ban_middleware import BanMiddleware
-
 from otzif import send_otzif
 
 # --- RENDER UCHUN FLASK WEB-SERVER QISMI ---
@@ -69,16 +61,14 @@ def home():
 
 def run():
     port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=port)
 
 def keep_alive():
     t = Thread(target=run)
-    t.daemon = True
     t.start()
 # -------------------------------------------
 
-
-# Bot va Dispatcher obyektlarini yaratish (Agar boshqa faylda bo'lmasa, shu yerda davom etadi)
+# Bot va Dispatcher obyektlarini yaratish
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
@@ -92,8 +82,8 @@ async def main():
     print("Veb-server (Flask) ishga tushdi!")
     
     # 2. Boshqa fon sikllarini ishga tushirish (masalan, to'lovlarni tekshirish)
-    # asyncio.create_task(check_payments_loop())
-    # asyncio.create_task(expire_payments_loop())
+    asyncio.create_task(check_payments_loop(bot))
+    asyncio.create_task(expire_payments_loop(bot))
 
     # 3. Botni ishga tushirish
     await dp.start_polling(bot)
@@ -3713,13 +3703,17 @@ async def statistics(message: Message):
     )
 
 
+import os
+import asyncio
+from aiogram import F
+from aiogram.types import Message, BotCommand, BotCommandScopeAllPrivateChats
+
 # =========================
 # BOTNI PAUZA QILISH
 # =========================
 
 @dp.message(F.text == "⛔ Botni to'xtatish")
 async def pause_bot(message: Message):
-
     if message.from_user.id != ADMIN_ID:
         return
 
@@ -3740,7 +3734,6 @@ async def pause_bot(message: Message):
 
 @dp.message(F.text == "▶️ Botni ishga tushirish")
 async def resume_bot(message: Message):
-
     if message.from_user.id != ADMIN_ID:
         return
 
