@@ -1,7 +1,10 @@
+import os
 import asyncio
 import sqlite3
 
 import bot_status
+from flask import Flask
+from threading import Thread
 
 from aiogram import Bot, Dispatcher, F, BaseMiddleware
 
@@ -56,6 +59,51 @@ from subscription import (
 from ban_middleware import BanMiddleware
 
 from otzif import send_otzif
+
+# --- RENDER UCHUN FLASK WEB-SERVER QISMI ---
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot muvaffaqiyatli ishlamoqda!"
+
+def run():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.daemon = True
+    t.start()
+# -------------------------------------------
+
+
+# Bot va Dispatcher obyektlarini yaratish (Agar boshqa faylda bo'lmasa, shu yerda davom etadi)
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
+dp = Dispatcher()
+
+# Kerakli middleware'larni ulash (Agar mavjud bo'lsa)
+# dp.message.middleware(BanMiddleware())
+
+
+async def main():
+    # 1. Render uxlab qolmasligi uchun Flask veb-serverini alohida oqimda ishga tushiramiz
+    keep_alive()
+    print("Veb-server (Flask) ishga tushdi!")
+    
+    # 2. Boshqa fon sikllarini ishga tushirish (masalan, to'lovlarni tekshirish)
+    # asyncio.create_task(check_payments_loop())
+    # asyncio.create_task(expire_payments_loop())
+
+    # 3. Botni ishga tushirish
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Bot to'xtatildi!")
 # =========================
 # UC STATES 
 # ========================= 
@@ -3706,11 +3754,10 @@ async def resume_bot(message: Message):
     )
 
 
-# =========================
-# MAIN
-# =========================
-
 async def main():
+    # 1. Render uxlab qolmasligi uchun Flask veb-serverini ishga tushiramiz
+    keep_alive()
+    print("Veb-server (Flask) ishga tushdi!")
 
     print("✅ BOT ISHGA TUSHDI")
     print("🔄 HAMYON AVTO TEKSHIRUV ISHGA TUSHDI")
@@ -3730,10 +3777,11 @@ async def main():
         scope=BotCommandScopeAllPrivateChats()
     )
 
-    
-
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Bot to'xtatildi!")
