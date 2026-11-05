@@ -1,0 +1,1 @@
+BOT_PAUSED = False
